@@ -4,13 +4,14 @@
 #### It can be described as smart devices control autonomous system app.
 
 ## Prerequisites:
-- docker and docker-compose (https://docs.docker.com/get-started/)
+- docker (https://docs.docker.com/engine/install/)
+- docker-compose (https://docs.docker.com/compose/install/)
 
 ## Installation:
 - download docker images, docker-compose configuration, install and run scripts: **download https://kpfuru-my.sharepoint.com/:f:/g/personal/ramirrsultanov_stud_kpfu_ru/EtEUPjLhBPxFjELZKahJlksBX4_SgD0R_I5heLxGB-G5RA?e=A9OkgG**
 - extract the downloaded archive and go to the directory where files have been extracted
-- install docker images to your computer: **sh install.sh**
+- install docker images to your computer: **sudo chmod +x \*.sh && sudo ./install.sh**
 
 ## Launching:
-- run docker containers (note: one of docker containers uses 8080 port) : **sh start.sh**
+- run docker containers (note: one of docker containers uses 8080 port) : **sudo ./start.sh**
 - run qt app
