@@ -37,6 +37,15 @@ Imagine a house with many smart devices which are hard to manage because they ne
 - registering new users
 - automatic and manual updating of information from a server (the update button on the top of the main window)
 
+## Demonstration:
+![unlogged](https://user-images.githubusercontent.com/70936349/122098391-75281f00-ce19-11eb-8d63-9447bf5162a9.png) Unlogged user main window
+
+![logged_as_user](https://user-images.githubusercontent.com/70936349/122098407-78230f80-ce19-11eb-8d14-2f05bec32323.png) Logged-in user main window
+
+![logged_as_admin](https://user-images.githubusercontent.com/70936349/122098416-7a856980-ce19-11eb-9a8e-4bb7d9ed6c7b.png) Logged-in admin main window
+
+Demo video: https://user-images.githubusercontent.com/70936349/122099492-b79e2b80-ce1a-11eb-8cf2-b03bdb4b7af1.mp4
+
 ## Known issues:
 - there is no full duplex exchange between a server and devices
 - the main tableview is a little bit broken on init
