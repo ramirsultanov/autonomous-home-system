@@ -10,7 +10,7 @@ Imagine a house with many smart devices which are hard to manage because they ne
 - docker-compose (https://docs.docker.com/compose/install/)
 
 ## Installation:
-- download docker images, docker-compose configuration, install and run scripts: **download https://kpfuru-my.sharepoint.com/:f:/g/personal/ramirrsultanov_stud_kpfu_ru/EtEUPjLhBPxFjELZKahJlksBX4_SgD0R_I5heLxGB-G5RA?e=A9OkgG**
+- download docker images, docker-compose configuration, install and run scripts: **download folder https://kpfuru-my.sharepoint.com/:f:/g/personal/ramirrsultanov_stud_kpfu_ru/EtEUPjLhBPxFjELZKahJlksBX4_SgD0R_I5heLxGB-G5RA?e=A9OkgG**
 - extract the downloaded archive and go to the directory where files have been extracted
 - install docker images to your computer: **sudo chmod +x \*.sh && sudo ./install.sh**
 
