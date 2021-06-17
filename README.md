@@ -38,7 +38,7 @@ Imagine a house with many smart devices which are hard to manage because they ne
 - automatic and manual updating of information from a server (the update button on the top of the main window)
 
 ## Demonstration:
-![unlogged](https://user-images.githubusercontent.com/70936349/122098391-75281f00-ce19-11eb-8d63-9447bf5162a9.png) Unlogged user main window
+![unlogged](https://user-images.githubusercontent.com/70936349/122413499-1684b180-cf8f-11eb-875b-2ddd8a40a589.png) Unlogged user main window
 
 ![logged_as_user](https://user-images.githubusercontent.com/70936349/122098407-78230f80-ce19-11eb-8d14-2f05bec32323.png) Logged-in user main window
 
