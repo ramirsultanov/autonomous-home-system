@@ -53,6 +53,8 @@ if(ANDROID)
     registeruserform.cpp
     registeruserform.h
     registeruserform.ui
+    statuslistwidgetitem.cpp
+    statuslistwidgetitem.h
   )
 else()
   add_executable(ahs
@@ -80,6 +82,8 @@ else()
     registeruserform.cpp
     registeruserform.h
     registeruserform.ui
+    statuslistwidgetitem.cpp
+    statuslistwidgetitem.h
   )
 endif()
 

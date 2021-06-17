@@ -12,6 +12,7 @@
 #include "tokenizer.h"
 #include "config.h"
 #include "devicemodel.h"
+#include "statuslistwidgetitem.h"
 
 namespace Ui {
 class DeviceForm;
@@ -39,6 +40,11 @@ private:
     Ui::DeviceForm *ui;
     DeviceModel model_;
     QList<QListWidgetItem*> devices_;
+    void clear();
+    void setAllowedDevicesView(QJsonArray response, QList<QString> devices);
+    void disableAllowedDevicesView();
+    void disableButtons();
+    void setLabelAllowed();
 };
 
 #endif // DEVICEFORM_H

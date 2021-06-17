@@ -15,7 +15,7 @@ RegisterUserForm::RegisterUserForm(QWidget *parent) :
                 ) - Config::popupDeviation;
     this->move(p);
     setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);
-    this->connect(this, SIGNAL(windowClosing()), this, SLOT(on_exit()));
+    this->connect(this, &RegisterUserForm::windowClosing, this, &RegisterUserForm::on_exit);
 }
 
 RegisterUserForm::~RegisterUserForm()
@@ -25,17 +25,14 @@ RegisterUserForm::~RegisterUserForm()
 
 void RegisterUserForm::on_registerButton_clicked()
 {
-    QUrl url(QString::fromStdString(Config::registerUrl));
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
+    QNetworkRequest req(Config::registerUrl);
     QJsonObject obj;
     obj.insert("role", "USER");
     obj.insert("username", ui->usernameEdit->text());
     obj.insert("password", ui->passwordEdit->text());
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument(obj).toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     QColor col;
     if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)

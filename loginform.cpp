@@ -42,17 +42,15 @@ void LoginForm::on_request_finished(QNetworkReply *reply)
 
 void LoginForm::on_okButtin_clicked()
 {
-    QUrl url(QString::fromStdString(Config::loginUrl));
-    QNetworkRequest req = QNetworkRequest(url);
+    QNetworkRequest req(Config::loginUrl);
     req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QJsonObject obj;
     obj.insert("username", ui->usernameEdit->text());
     obj.insert("password", ui->passwordEdit->text());
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    auto reply = Network::instance().post(req, QJsonDocument(obj).toJson());
     ui->textBrowser->setText("Proccessing...");
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     this->on_request_finished(reply);
 }

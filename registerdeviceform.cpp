@@ -15,7 +15,7 @@ RegisterDeviceForm::RegisterDeviceForm(QWidget *parent) :
                 ) - Config::popupDeviation;
     this->move(p);
     setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);
-    this->connect(this, SIGNAL(windowClosing()), this, SLOT(on_exit()));
+    this->connect(this, &RegisterDeviceForm::windowClosing, this, &RegisterDeviceForm::on_exit);
 }
 
 RegisterDeviceForm::~RegisterDeviceForm()
@@ -25,15 +25,13 @@ RegisterDeviceForm::~RegisterDeviceForm()
 
 void RegisterDeviceForm::on_registerButton_clicked()
 {
-    QNetworkRequest req(QUrl(QString::fromStdString(Config::registerUrl)));
-    req = Tokenizer::tokenize(req);
+    QNetworkRequest req(Config::registerUrl);
     QJsonObject obj;
     obj.insert("username", ui->usernameEdit->text());
     obj.insert("password", ui->passwordEdit->text());
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument(obj).toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     QColor col;
     if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)

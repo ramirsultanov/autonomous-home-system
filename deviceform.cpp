@@ -23,78 +23,60 @@ DeviceForm::~DeviceForm()
     delete ui;
 }
 
-void DeviceForm::setInfo()
+void DeviceForm::clear()
 {
-    QUrl url(QString::fromStdString(Config::deviceUrl) + ui->nameLabel->text());
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
-    auto reply = Network::instance().get(req);
-    QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
-    loop.exec();
     devices_.clear();
     ui->listWidget->clear();
-    QColor col;
-    if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)
+}
+
+void DeviceForm::setAllowedDevicesView(QJsonArray response, QList<QString> devices)
+{
+    ui->labelAllowed->setEnabled(true);
+    ui->listWidget->setEnabled(true);
+    ui->saveButton->setEnabled(true);
+    if (Tokenizer::role == "ADMIN")
     {
-        QByteArray bytes = reply->readAll();
-        QJsonDocument doc = QJsonDocument::fromJson(bytes);
-        QJsonArray arr = doc.object().value("devices").toArray();
-        auto devices = model_.getDevices();
-        devices.removeAll(ui->nameLabel->text());
-        if (!devices.empty())
-        {
-            ui->labelAllowed->setEnabled(true);
-            ui->listWidget->setEnabled(true);
-            ui->saveButton->setEnabled(true);
-            if (Tokenizer::role == "ADMIN")
-            {
-                ui->removeButton->setEnabled(true);
-            }
-            else
-            {
-                ui->removeButton->setEnabled(false);
-            }
-            ui->labelCommand->setEnabled(true);
-            ui->lineEdit->setEnabled(true);
-            for (QString dev : devices)
-            {
-                QListWidgetItem* checkBox = new QListWidgetItem();
-                devices_.append(checkBox);
-                QFont font;
-                font.setPointSize(12);
-                checkBox->setFont(font);
-                checkBox->setText(dev);
-                checkBox->setCheckState(arr.contains(dev) ? Qt::Checked : Qt::Unchecked);
-                if (Tokenizer::role == "USER")
-                {
-                    checkBox->setFlags(checkBox->flags() & ~Qt::ItemIsUserCheckable);
-                }
-                ui->listWidget->addItem(checkBox);
-            }
-            ui->listWidget->update();
-        }
-        else
-        {
-            ui->labelAllowed->setEnabled(false);
-            ui->listWidget->setEnabled(false);
-            ui->labelCommand->setEnabled(false);
-            ui->lineEdit->setEnabled(false);
-            ui->saveButton->setEnabled(false);
-            ui->removeButton->setEnabled(false);
-        }
-        ui->saveButton->setStyleSheet("");
+        ui->removeButton->setEnabled(true);
     }
     else
     {
-
-        col = Qt::gray;
-        QString qss = QString("background-color: %1").arg(col.name());
-        ui->saveButton->setStyleSheet(qss);
-        ui->saveButton->setEnabled(false);
         ui->removeButton->setEnabled(false);
     }
-    reply->deleteLater();
+    ui->labelCommand->setEnabled(true);
+    ui->lineEdit->setEnabled(true);
+    for (QString dev : devices)
+    {
+        StatusListWidgetItem* item = new StatusListWidgetItem(dev, response.contains(dev), Tokenizer::role == "ADMIN");
+        devices_.append(item);
+        ui->listWidget->addItem(item);
+    }
+    ui->saveButton->setStyleSheet("");
+    ui->listWidget->update();
+}
+
+void DeviceForm::disableAllowedDevicesView()
+{
+    ui->labelAllowed->setEnabled(false);
+    ui->listWidget->setEnabled(false);
+    ui->labelCommand->setEnabled(false);
+    ui->lineEdit->setEnabled(false);
+    ui->saveButton->setEnabled(false);
+    ui->removeButton->setEnabled(false);
+    ui->saveButton->setStyleSheet("");
+}
+
+void DeviceForm::disableButtons()
+{
+    QColor col;
+    col = Qt::gray;
+    QString qss = QString("background-color: %1").arg(col.name());
+    ui->saveButton->setStyleSheet(qss);
+    ui->saveButton->setEnabled(false);
+    ui->removeButton->setEnabled(false);
+}
+
+void DeviceForm::setLabelAllowed()
+{
     if (Tokenizer::role == "ADMIN")
     {
         ui->labelAllowed->setEnabled(true);
@@ -103,6 +85,38 @@ void DeviceForm::setInfo()
     {
         ui->labelAllowed->setEnabled(false);
     }
+}
+
+void DeviceForm::setInfo()
+{
+    QNetworkRequest req(Config::deviceUrl + ui->nameLabel->text());
+    auto reply = Network::instance().get(Tokenizer::tokenize(req));
+    QEventLoop loop;
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
+    loop.exec();
+    this->clear();
+    if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)
+    {
+        QByteArray bytes = reply->readAll();
+        reply->deleteLater();
+        QJsonDocument doc = QJsonDocument::fromJson(bytes);
+        QJsonArray arr = doc.object().value("devices").toArray();
+        auto devices = model_.getDevices();
+        devices.removeAll(ui->nameLabel->text());
+        if (!devices.empty())
+        {
+            this->setAllowedDevicesView(arr, devices);
+        }
+        else
+        {
+            this->disableAllowedDevicesView();
+        }
+    }
+    else
+    {
+        this->disableButtons();
+    }
+    this->setLabelAllowed();
 }
 
 void DeviceForm::setDeviceName(QString name)
@@ -117,9 +131,7 @@ void DeviceForm::setDeviceScript(QString script)
 
 void DeviceForm::on_saveButton_clicked()
 {
-    QUrl url(QString::fromStdString(Config::setDeviceConfigUrl));
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
+    QNetworkRequest req(Config::setDeviceConfigUrl);
     QJsonObject obj;
     obj.insert("username", ui->nameLabel->text());
     obj.insert("script", ui->lineEdit->text());
@@ -132,10 +144,9 @@ void DeviceForm::on_saveButton_clicked()
         }
     }
     obj.insert("devices", arr);
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument(obj).toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     QColor col;
     if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)
@@ -155,15 +166,12 @@ void DeviceForm::on_saveButton_clicked()
 
 void DeviceForm::on_removeButton_clicked()
 {
-    QUrl url(QString::fromStdString(Config::removeUrl));
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
+    QNetworkRequest req(Config::removeUrl);
     QJsonObject obj;
     obj.insert("devicename", ui->nameLabel->text());
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument(obj).toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     QColor col;
     if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)

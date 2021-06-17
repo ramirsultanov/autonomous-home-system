@@ -9,11 +9,11 @@ MainWindow::MainWindow(QWidget *parent)
     this->setFixedSize(Config::width, Config::height);
     this->showFullScreen();
     ui->tableView->setModel(&model_);
-    this->connect(&lf_.tokenizer, SIGNAL(tokenChanged()), this, SLOT(on_tokenChanged()));
-    this->connect(this, SIGNAL(tableChanged()), this, SLOT(on_tableChanged()));
-    this->connect(&rd_, SIGNAL(tableChanged()), this, SLOT(on_tableChanged()));
-    this->connect(ui->tableView, SIGNAL(doubleClicked(const QModelIndex& index)), this, SLOT(on_tableView_doubleClicked(const QModelIndex& index)));
-    this->connect(&df_, SIGNAL(tableChanged()), this, SLOT(on_tableChanged()));
+    this->connect(&lf_.tokenizer, &Tokenizer::tokenChanged, this, &MainWindow::on_tokenChanged);
+    this->connect(this, &MainWindow::tableChanged, this, &MainWindow::on_tableChanged);
+    this->connect(&rd_, &RegisterDeviceForm::tableChanged, this, &MainWindow::on_tableChanged);
+    this->connect(ui->tableView, &QTableView::doubleClicked, this, &MainWindow::on_tableView_doubleClicked);
+    this->connect(&df_, &DeviceForm::tableChanged, this, &MainWindow::on_tableChanged);
     this->connect(updateTimer_, &QTimer::timeout, this, &MainWindow::on_updateTimer);
     this->connect(saveChangedTimer_, &QTimer::timeout, this, &MainWindow::on_saveTimer);
 }
@@ -74,6 +74,7 @@ void MainWindow::on_getTableFinished(QNetworkReply *reply)
         ui->tableView->horizontalHeader()->setSectionResizeMode(static_cast<int>(DeviceModelColumns::NAME_COLUMN), QHeaderView::ResizeToContents);
         ui->tableView->horizontalHeader()->setSectionResizeMode(static_cast<int>(DeviceModelColumns::STATUS_COLUMN), QHeaderView::ResizeToContents);
         ui->tableView->horizontalHeader()->setSectionResizeMode(static_cast<int>(DeviceModelColumns::MESSAGE_COLUMN), QHeaderView::Stretch);
+        ui->tableView->horizontalHeader()->setVisible(true);
         ui->updateButton->setEnabled(true);
         timeLeft_ = Config::updateInterval;
         updateTimer_->start(1000);
@@ -89,12 +90,10 @@ void MainWindow::on_getTableFinished(QNetworkReply *reply)
 
 void MainWindow::updateTableView()
 {
-    QUrl url(QString::fromStdString(Config::homeUrl));
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
-    auto reply = Network::instance().get(req);
+    QNetworkRequest req(Config::homeUrl);
+    auto reply = Network::instance().get(Tokenizer::tokenize(req));
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     this->on_getTableFinished(reply);
 }
@@ -153,14 +152,10 @@ void MainWindow::on_regDeviceButton_clicked()
 
 void MainWindow::on_enableAllButton_clicked()
 {
-    QUrl url(QString::fromStdString(Config::enableAllUrl));
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
-    QJsonObject obj;
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    QNetworkRequest req(Config::enableAllUrl);
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument().toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)
     {
@@ -176,14 +171,10 @@ void MainWindow::on_enableAllButton_clicked()
 
 void MainWindow::on_shutdownAllButton_clicked()
 {
-    QUrl url(QString::fromStdString(Config::shutdownAllUrl));
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
-    QJsonObject obj;
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    QNetworkRequest req(Config::shutdownAllUrl);
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument().toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     if (!reply->error() && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200)
     {
@@ -204,6 +195,7 @@ void MainWindow::on_registerUserButton_clicked()
 void MainWindow::reset()
 {
     model_.removeDevices();
+    ui->tableView->horizontalHeader()->setVisible(false);
     emit this->tableChanged();
     ui->logoutButton->setEnabled(false);
     ui->updateButton->setEnabled(false);
@@ -220,14 +212,11 @@ void MainWindow::reset()
 
 void MainWindow::on_logoutButton_clicked()
 {
-    QUrl url(QString::fromStdString(Config::logoutUrl));
+    QUrl url(Config::logoutUrl);
     QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
-    QJsonObject obj;
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument().toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     if (!reply->error()) // status is not equal "200"
     {
@@ -257,9 +246,7 @@ void MainWindow::on_exitButton_clicked()
 
 void MainWindow::on_saveButton_clicked()
 {
-    QUrl url(QString::fromStdString(Config::changeDevicesStatusUrl));
-    QNetworkRequest req(url);
-    req = Tokenizer::tokenize(req);
+    QNetworkRequest req(Config::changeDevicesStatusUrl);
     QJsonArray arr;
     for (QModelIndex i : model_.getChangedIndexes())
     {
@@ -267,10 +254,9 @@ void MainWindow::on_saveButton_clicked()
     }
     QJsonObject obj;
     obj.insert("changed", arr);
-    QJsonDocument doc(obj);
-    auto reply = Network::instance().post(req, doc.toJson());
+    auto reply = Network::instance().post(Tokenizer::tokenize(req), QJsonDocument(obj).toJson());
     QEventLoop loop;
-    connect(&Network::instance(), SIGNAL(finished(QNetworkReply*)), &loop, SLOT(quit()));
+    connect(&Network::instance(), &QNetworkAccessManager::finished, &loop, &QEventLoop::quit);
     loop.exec();
     QColor col;
     const int time = 3000;

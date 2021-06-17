@@ -48,6 +48,5 @@ Demo video: https://user-images.githubusercontent.com/70936349/122099492-b79e2b8
 
 ## Known issues:
 - there is no full duplex exchange between a server and devices
-- the main tableview is a little bit broken on init
 - "enable all" and "shutdown all" buttons are changing status of disabled devices
 - there is no informative error description when receiving error responses from a server
