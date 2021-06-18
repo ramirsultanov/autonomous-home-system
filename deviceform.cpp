@@ -29,7 +29,7 @@ void DeviceForm::clear()
     ui->listWidget->clear();
 }
 
-void DeviceForm::setAllowedDevicesView(QJsonArray response, QList<QString> devices)
+void DeviceForm::setAllowedDevicesView(const QJsonArray& response, const QList<QString>& devices)
 {
     ui->labelAllowed->setEnabled(true);
     ui->listWidget->setEnabled(true);

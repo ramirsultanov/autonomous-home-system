@@ -41,7 +41,7 @@ private:
     DeviceModel model_;
     QList<QListWidgetItem*> devices_;
     void clear();
-    void setAllowedDevicesView(QJsonArray response, QList<QString> devices);
+    void setAllowedDevicesView(const QJsonArray& response, const QList<QString>& devices);
     void disableAllowedDevicesView();
     void disableButtons();
     void setLabelAllowed();
